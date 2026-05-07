@@ -1,4 +1,4 @@
 Flask
 gunicorn
 flask-mysqldb
-bcrypt
+bcrypt==4.0.1
