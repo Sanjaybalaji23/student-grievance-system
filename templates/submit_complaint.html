@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+{% block title %}Submit Complaint{% endblock %}
+
+{% block navbar %}
+<nav class="topbar">
+    <a class="topbar-brand" href="/dashboard">
+        <div class="brand-icon">🎓</div>
+        Grievance<span class="brand-hl">Hub</span>
+    </a>
+    <ul class="topbar-nav">
+        <li><a href="/dashboard">🏠 Dashboard</a></li>
+        <li><a href="/submit" class="active">✍️ New Complaint</a></li>
+        <li><a href="/my-complaints">📋 My Complaints</a></li>
+        <li><a href="/logout" class="btn-nav-logout">🚪 Logout</a></li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    :root {
+        --module-bg: linear-gradient(rgba(240, 249, 255, 0.85), rgba(224, 242, 254, 0.88)), url('/static/images/dashboard_bg.png') center/cover no-repeat fixed;
+    }
+
+    .submit-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+
+    @media (max-width: 900px) {
+        .submit-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Priority pills */
+    .priority-pills {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    .p-pill {
+        flex: 1;
+        min-width: 80px;
+        padding: 0.55rem 0.75rem;
+        border-radius: 9px;
+        border: 1.5px solid var(--border);
+        background: var(--surface2);
+        cursor: pointer;
+        text-align: center;
+        font-size: 0.83rem;
+        font-weight: 600;
+        color: var(--text-3);
+        transition: all var(--transition);
+        user-select: none;
+    }
+
+    .p-pill:hover {
+        border-color: var(--border-dark);
+        color: var(--text-2);
+    }
+
+    .p-pill.sel-low {
+        background: var(--accent-soft);
+        border-color: #6ee7b7;
+        color: #065f46;
+    }
+
+    .p-pill.sel-medium {
+        background: var(--warn-soft);
+        border-color: #fde68a;
+        color: #92400e;
+    }
+
+    .p-pill.sel-high {
+        background: var(--danger-soft);
+        border-color: #fca5a5;
+        color: #991b1b;
+    }
+
+    /* Char counter */
+    .char-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.35rem;
+        font-size: 0.74rem;
+        color: var(--text-3);
+    }
+
+    .char-val {
+        font-weight: 600;
+        color: var(--text-2);
+    }
+
+    .char-val.warn {
+        color: var(--warn);
+    }
+
+    .char-val.danger {
+        color: var(--danger);
+    }
+
+    /* Form grid */
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 600px) {
+        .form-grid-2 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Sidebar tips */
+    .tip-card {
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .tip-card h4 {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.85rem;
+    }
+
+    .tip-item {
+        display: flex;
+        gap: 0.6rem;
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin-bottom: 0.6rem;
+        line-height: 1.4;
+    }
+
+    .tip-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        margin-top: 0.35rem;
+        flex-shrink: 0;
+    }
+
+    .info-strip {
+        padding: 0.85rem 1.1rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.82rem;
+        display: flex;
+        gap: 0.65rem;
+        align-items: flex-start;
+    }
+
+    .info-strip.amber {
+        background: rgba(255, 251, 235, 0.85);
+        backdrop-filter: blur(10px);
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .info-strip.sky {
+        background: rgba(224, 242, 254, 0.85);
+        backdrop-filter: blur(10px);
+        color: #075985;
+        border: 1px solid #bae6fd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="breadcrumb">
+                <a href="/dashboard">Dashboard</a>
+                <span class="breadcrumb-sep">›</span>
+                <span>New Complaint</span>
+            </div>
+            <h1>Submit a Complaint</h1>
+            <p>Describe your grievance clearly. We aim to resolve all complaints within <strong
+                    style="color:var(--accent);">3 days</strong>.</p>
+        </div>
+    </div>
+
+    <div class="submit-layout">
+        <!-- Main form -->
+        <div class="card glass-card" style="animation: bodyReveal 0.4s ease both; padding: 2rem;">
+            <form method="POST" action="/submit" id="complaintForm" enctype="multipart/form-data">
+
+                <div class="form-group">
+                    <label for="title">Complaint Title</label>
+                    <input type="text" id="title" name="title" class="form-control"
+                        placeholder="Brief summary of your issue" required maxlength="120"
+                        oninput="updateCount(this, 'tCount', 120)">
+                    <div class="char-row">
+                        <span>Max 120 characters</span>
+                        <span class="char-val" id="tCount">0 / 120</span>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" class="form-control" required>
+                            <option value="" disabled selected>Select category</option>
+                            <option value="Academic">🎓 Academic</option>
+                            <option value="Hostel">🏠 Hostel</option>
+                            <option value="Exam">📝 Exam</option>
+                            <option value="Transport">🚌 Transport</option>
+                            <option value="Other">📌 Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Priority Level</label>
+                        <select id="priority" name="priority" required style="display:none;">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                        <div class="priority-pills">
+                            <div class="p-pill" onclick="setPrio('Low')" id="pLow">🟢 Low</div>
+                            <div class="p-pill" onclick="setPrio('Medium')" id="pMedium">🟡 Medium</div>
+                            <div class="p-pill" onclick="setPrio('High')" id="pHigh">🔴 High</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="6"
+                        placeholder="Provide a detailed description. Include relevant dates, names, and context."
+                        required oninput="updateCount(this, 'dCount', 2000)"></textarea>
+                    <div class="char-row">
+                        <span>Be as specific as possible</span>
+                        <span class="char-val" id="dCount">0 / 2000</span>
+                    </div>
+                </div>
+
+                <div class="form-group"
+                    style="padding: 1.5rem; background: var(--surface2); border: 2px dashed var(--border-dark); border-radius: 12px; margin-bottom: 2rem; position: relative;">
+
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.75rem;">
+                        <label for="media" style="margin: 0; display: block;">Evidence / Attachement (Optional)</label>
+                        <button type="button" class="btn btn-secondary" onclick="openCamera()"
+                            style="padding: 0.35rem 0.85rem; font-size: 0.8rem; display: flex; gap: 6px; align-items: center; border-radius: 6px;">
+                            <span>📸</span> <span id="camBtnText">Use Camera</span>
+                        </button>
+                    </div>
+
+                    <!-- Camera UI Container -->
+                    <div id="camera-container"
+                        style="display: none; width: 100%; border-radius: 8px; overflow: hidden; margin-bottom: 1rem; position: relative; background: #000;">
+                        <video id="camera-feed" autoplay playsinline
+                            style="width: 100%; max-height: 350px; object-fit: cover; display: block;"></video>
+                        <button type="button" id="capture-btn" class="btn btn-primary" onclick="takePhoto()"
+                            style="position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); border-radius: 99px; padding: 0.55rem 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.6); font-weight: 600;">
+                            📸 Capture Photo
+                        </button>
+                    </div>
+                    <canvas id="camera-canvas" style="display: none;"></canvas>
+
+                    <!-- Preview Container -->
+                    <div id="camera-preview-box"
+                        style="display:none; align-items:center; gap: 1rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+                        <img id="camera-thumbnail"
+                            style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; box-shadow: var(--shadow-xs);">
+                        <div style="flex:1;">
+                            <p style="font-weight: 600; font-size: 0.85rem; margin: 0; color: var(--text);">Live Photo
+                                Attached</p>
+                            <p style="font-size: 0.75rem; color: var(--text-3); margin: 0;">This photo will be submitted
+                                as evidence.</p>
+                        </div>
+                        <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('media').value=''; document.getElementById('camera-preview-box').style.display='none';"
+                            style="padding: 0.3rem 0.6rem; font-size:0.75rem;">Remove</button>
+                    </div>
+
+                    <input type="file" id="media" name="media" class="form-control" accept="image/*,video/*"
+                        style="background: transparent !important; border: none !important; padding: 0.5rem 0; cursor: pointer; box-shadow: none;">
+                    <div style="font-size: 0.82rem; color: var(--text-3); margin-top: 0.5rem;">
+                        Got screenshots or videos? Upload them here. Max size: <strong
+                            style="color:var(--text-2)">50MB</strong>. Include relevant evidence like photos or short
+                        clips.
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">✍️ Submit Complaint</button>
+                    <a href="/my-complaints" class="btn btn-secondary btn-lg">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <div class="tip-card glass-card">
+                <h4>📋 Tips for a Good Complaint</h4>
+                <div class="tip-item">
+                    <div class="tip-dot"></div><span>Be specific about dates, times and locations</span>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-dot"></div><span>Name the people involved if applicable</span>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-dot"></div><span>Describe the impact on you clearly</span>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-dot"></div><span>State what resolution you expect</span>
+                </div>
+            </div>
+
+            <div class="info-strip amber" style="margin-bottom:0.75rem;">
+                <span>⏳</span>
+                <span>Complaints pending for <strong>more than 3 days</strong> are automatically escalated.</span>
+            </div>
+
+            <div class="info-strip sky">
+                <span>ℹ️</span>
+                <span>Track status in <a href="/my-complaints" style="color:#0369a1;font-weight:600;">My
+                        Complaints</a>.</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let selPrio = null;
+    function setPrio(val) {
+        selPrio = val;
+        document.getElementById('priority').value = val;
+        ['Low', 'Medium', 'High'].forEach(p => {
+            document.getElementById('p' + p).className = 'p-pill';
+        });
+        document.getElementById('p' + val).classList.add('sel-' + val.toLowerCase());
+    }
+    setPrio('Medium');
+
+    function updateCount(el, id, max) {
+        const len = el.value.length;
+        const el2 = document.getElementById(id);
+        el2.textContent = len + ' / ' + max;
+        el2.className = 'char-val';
+        if (len > max * 0.9) el2.classList.add('danger');
+        else if (len > max * 0.75) el2.classList.add('warn');
+    }
+
+    document.getElementById('complaintForm').addEventListener('submit', function (e) {
+        if (!selPrio) { e.preventDefault(); alert('Please select a priority level.'); return; }
+        const btn = document.getElementById('submitBtn');
+        btn.textContent = '⏳ Submitting…';
+        btn.disabled = true;
+    });
+
+    // ─── CAMERA LOGIC ───
+    let stream = null;
+
+    async function openCamera() {
+        const container = document.getElementById('camera-container');
+        const video = document.getElementById('camera-feed');
+        const btnText = document.getElementById('camBtnText');
+
+        if (container.style.display === 'block') {
+            closeCamera();
+            return;
+        }
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = stream;
+            container.style.display = 'block';
+            btnText.textContent = 'Close Camera';
+        } catch (err) {
+            alert('Unable to access camera. Please ensure permissions are granted. Error: ' + err.message);
+        }
+    }
+
+    function closeCamera() {
+        const container = document.getElementById('camera-container');
+        const video = document.getElementById('camera-feed');
+        const btnText = document.getElementById('camBtnText');
+
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        video.srcObject = null;
+        container.style.display = 'none';
+        btnText.textContent = 'Use Camera';
+    }
+
+    function takePhoto() {
+        const video = document.getElementById('camera-feed');
+        const canvas = document.getElementById('camera-canvas');
+
+        // Match canvas dimensions to video feed
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Draw the current video frame to the canvas
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Convert to file and attach to input via DataTransfer
+        canvas.toBlob((blob) => {
+            const fileName = "live_capture_" + Date.now() + ".jpg";
+            const file = new File([blob], fileName, { type: "image/jpeg" });
+            const dataTransfer = new DataTransfer();
+
+            dataTransfer.items.add(file);
+            document.getElementById('media').files = dataTransfer.files;
+
+            // Show thumbnail preview
+            const previewBox = document.getElementById('camera-preview-box');
+            const previewImg = document.getElementById('camera-thumbnail');
+            previewImg.src = URL.createObjectURL(blob);
+            previewBox.style.display = 'flex';
+
+            closeCamera();
+
+            // Visual feedback loop: We append a small success indicator
+            const fileInput = document.getElementById('media');
+            fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+            alert('📸 Photo captured and attached automatically!');
+        }, 'image/jpeg', 0.9);
+    }
+</script>
+{% endblock %}

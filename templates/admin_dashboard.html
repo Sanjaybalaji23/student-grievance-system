@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block navbar %}
+<nav class="topbar">
+    <a class="topbar-brand" href="/dashboard">
+        <div class="brand-icon">🎓</div>
+        Grievance<span class="brand-hl">Hub</span>
+    </a>
+    <ul class="topbar-nav">
+        <li><a href="/dashboard">🏠 Dashboard</a></li>
+        <li><a href="/admin" class="active">⚙️ Admin</a></li>
+        <li><a href="/admin/complaints">📋 Complaints</a></li>
+        <li><a href="/admin/audit-logs">🔍 Audit Logs</a></li>
+        <li><a href="/logout" class="btn-nav-logout">🚪 Logout</a></li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    :root {
+        --module-bg: linear-gradient(rgba(255, 241, 242, 0.88), rgba(243, 232, 255, 0.88)), url('/static/images/dashboard_bg.png') center/cover no-repeat fixed;
+    }
+
+    .admin-banner {
+        padding: 2rem 2.4rem;
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .admin-banner::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 90% 50%, rgba(99, 102, 241, 0.2), transparent 60%);
+    }
+
+    .admin-banner-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(99, 102, 241, 0.2);
+        border: 1px solid rgba(99, 102, 241, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .admin-banner-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .admin-banner-text h2 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.2rem;
+    }
+
+    .admin-banner-text p {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    /* Progress bar */
+    .progress-card {
+        padding: 1.8rem 2rem;
+        margin-top: 2.5rem;
+    }
+
+    .progress-card h3 {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-3);
+        margin-bottom: 1rem;
+    }
+
+    .progress-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .progress-row span:first-child {
+        color: var(--text-2);
+    }
+
+    .progress-row span:last-child {
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .progress-bar-wrap {
+        height: 8px;
+        background: var(--border);
+        border-radius: 99px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.8s ease;
+        background: var(--accent);
+    }
+
+    .progress-fill.warn {
+        background: var(--warn);
+    }
+
+    .admin-action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .admin-action-card {
+        padding: 1.8rem;
+        text-decoration: none;
+        transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: block;
+    }
+
+    .admin-action-card:hover {
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-dark);
+        transform: translateY(-2px);
+    }
+
+    .admin-action-card h3 {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+        margin: 0.85rem 0 0.35rem;
+    }
+
+    .admin-action-card p {
+        font-size: 0.83rem;
+        color: var(--text-3);
+        line-height: 1.5;
+    }
+
+    .admin-action-link {
+        margin-top: 1rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--accent-dark);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="admin-banner glass-card" style="background: rgba(255,255,255,0.1) !important;">
+        <div class="admin-banner-icon">⚙️</div>
+        <div class="admin-banner-text">
+            <h2>Admin Dashboard</h2>
+            <p>Overview of the grievance portal — manage complaints and system activity.</p>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card purple">
+            <div class="stat-icon purple">📊</div>
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">Total Complaints</div>
+        </div>
+        <div class="stat-card amber">
+            <div class="stat-icon amber">⏳</div>
+            <div class="stat-value">{{ stats.pending }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-icon blue">🔄</div>
+            <div class="stat-value">{{ stats.in_progress }}</div>
+            <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card emerald">
+            <div class="stat-icon emerald">✅</div>
+            <div class="stat-value">{{ stats.resolved }}</div>
+            <div class="stat-label">Resolved</div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-icon red">🔺</div>
+            <div class="stat-value">{{ stats.escalated }}</div>
+            <div class="stat-label">Escalated</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="admin-action-grid">
+        <a href="/admin/complaints" class="admin-action-card glass-card">
+            <div class="stat-icon blue">📋</div>
+            <h3>Manage Complaints</h3>
+            <p>Filter, search, and update the status of all student grievances.</p>
+            <div class="admin-action-link">Open →</div>
+        </a>
+        <a href="/admin/audit-logs" class="admin-action-card glass-card">
+            <div class="stat-icon purple">🔍</div>
+            <h3>Audit Logs</h3>
+            <p>View all system activity — logins, submissions, and status changes.</p>
+            <div class="admin-action-link">View logs →</div>
+        </a>
+    </div>
+
+    <!-- Resolution rate -->
+    {% if stats.total > 0 %}
+    <div class="progress-card glass-card">
+        <h3>Resolution Rate</h3>
+        <div class="progress-row">
+            <span>Resolved</span>
+            <span>{{ ((stats.resolved / stats.total) * 100) | round(1) }}%</span>
+        </div>
+        <div class="progress-bar-wrap">
+            <div class="progress-fill" style="width:{{((stats.resolved/stats.total)*100)|round(1)}}%;"></div>
+        </div>
+        <div class="progress-row">
+            <span>Pending / In Progress</span>
+            <span>{{(((stats.pending+stats.in_progress)/stats.total)*100)|round(1)}}%</span>
+        </div>
+        <div class="progress-bar-wrap">
+            <div class="progress-fill warn"
+                style="width:{{(((stats.pending+stats.in_progress)/stats.total)*100)|round(1)}}%;"></div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

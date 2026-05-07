@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}All Complaints{% endblock %}
+
+{% block navbar %}
+<nav class="topbar">
+    <a class="topbar-brand" href="/dashboard">
+        <div class="brand-icon">🎓</div>
+        Grievance<span class="brand-hl">Hub</span>
+    </a>
+    <ul class="topbar-nav">
+        <li><a href="/dashboard">🏠 Dashboard</a></li>
+        <li><a href="/admin">⚙️ Admin</a></li>
+        <li><a href="/admin/complaints" class="active">📋 Complaints</a></li>
+        <li><a href="/admin/audit-logs">🔍 Audit Logs</a></li>
+        <li><a href="/logout" class="btn-nav-logout">🚪 Logout</a></li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    :root {
+        --module-bg: linear-gradient(rgba(255, 241, 242, 0.88), rgba(243, 232, 255, 0.88)), url('/static/images/dashboard_bg.png') center/cover no-repeat fixed;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="breadcrumb">
+                <a href="/admin">Admin</a>
+                <span class="breadcrumb-sep">›</span>
+                <span>All Complaints</span>
+            </div>
+            <h1>All Complaints</h1>
+            <p>Review, filter, and manage all student grievances.</p>
+        </div>
+        <a href="/admin" class="btn btn-secondary">← Back to Admin</a>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="GET" action="/admin/complaints">
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Status</label>
+                <select name="status">
+                    <option value="">All Statuses</option>
+                    <option value="Pending" {% if request.args.get('status')=='Pending' %}selected{% endif %}>⏳ Pending
+                    </option>
+                    <option value="In Progress" {% if request.args.get('status')=='In Progress' %}selected{% endif %}>🔄
+                        In Progress</option>
+                    <option value="Resolved" {% if request.args.get('status')=='Resolved' %}selected{% endif %}>✅
+                        Resolved</option>
+                    <option value="Escalated" {% if request.args.get('status')=='Escalated' %}selected{% endif %}>🔺
+                        Escalated</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Priority</label>
+                <select name="priority">
+                    <option value="">All Priorities</option>
+                    <option value="Low" {% if request.args.get('priority')=='Low' %}selected{% endif %}>🟢 Low</option>
+                    <option value="Medium" {% if request.args.get('priority')=='Medium' %}selected{% endif %}>🟡 Medium
+                    </option>
+                    <option value="High" {% if request.args.get('priority')=='High' %}selected{% endif %}>🔴 High
+                    </option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Category</label>
+                <select name="category">
+                    <option value="">All Categories</option>
+                    <option value="Academic" {% if request.args.get('category')=='Academic' %}selected{% endif %}>
+                        Academic</option>
+                    <option value="Hostel" {% if request.args.get('category')=='Hostel' %}selected{% endif %}>Hostel
+                    </option>
+                    <option value="Exam" {% if request.args.get('category')=='Exam' %}selected{% endif %}>Exam</option>
+                    <option value="Transport" {% if request.args.get('category')=='Transport' %}selected{% endif %}>
+                        Transport</option>
+                    <option value="Other" {% if request.args.get('category')=='Other' %}selected{% endif %}>Other
+                    </option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Search ID</label>
+                <input type="text" name="search" placeholder="Complaint ID or title"
+                    value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="filter-group" style="justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary btn-sm">🔍 Filter</button>
+            </div>
+            <div class="filter-group" style="justify-content:flex-end;">
+                <a href="/admin/complaints" class="btn btn-secondary btn-sm">✕ Clear</a>
+            </div>
+        </div>
+    </form>
+
+    {% if complaints %}
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Complaint ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Media</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th>Update Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in complaints %}
+                <tr>
+                    <td>
+                        <code
+                            style="font-size:0.78rem;color:var(--info);background:var(--info-soft);padding:2px 8px;border-radius:5px;border:1px solid #c4b5fd;">
+                            {{ c['complaint_id'] }}
+                        </code>
+                    </td>
+                    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                        title="{{ c['title'] }}">
+                        {{ c['title'] }}
+                    </td>
+                    <td style="font-size:0.83rem;color:var(--text-3);">{{ c['category'] }}</td>
+                    <td>
+                        {% if c['priority'] == 'High' %}<span class="badge badge-high">🔴 High</span>
+                        {% elif c['priority'] == 'Medium' %}<span class="badge badge-medium">🟡 Medium</span>
+                        {% else %}<span class="badge badge-low">🟢 Low</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if c['media_path'] %}
+                        <a href="{{ url_for('static', filename=c['media_path']) }}" target="_blank"
+                            style="color: #60a5fa; text-decoration: underline; font-size: 0.82rem; font-weight: 600;">📎
+                            View</a>
+                        {% else %}
+                        <span style="font-size: 0.8rem; color: var(--text-4);">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c['status'] == 'Pending' %}<span class="badge badge-pending">⏳ Pending</span>
+                        {% elif c['status'] == 'In Progress' %}<span class="badge badge-progress">🔄 In Progress</span>
+                        {% elif c['status'] == 'Resolved' %}<span class="badge badge-resolved">✅ Resolved</span>
+                        {% elif c['status'] == 'Escalated' %}<span class="badge badge-escalated">🔺 Escalated</span>
+                        {% else %}<span class="badge" style="background:var(--surface2);color:var(--text-3);">{{
+                            c['status'] }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.82rem;color:var(--text-3);white-space:nowrap;">
+                        {{ c['created_at'].strftime('%d %b %Y') if c['created_at'] else '-' }}
+                    </td>
+                    <td>
+                        <!-- ✅ FIXED: correct route with complaint_id -->
+                        <form method="POST" action="/admin/update-status/{{ c['complaint_id'] }}" class="inline-form">
+                            <select name="status" class="inline-select">
+                                <option value="Pending" {% if c['status']=='Pending' %}selected{% endif %}>Pending
+                                </option>
+                                <option value="In Progress" {% if c['status']=='In Progress' %}selected{% endif %}>In
+                                    Progress</option>
+                                <option value="Resolved" {% if c['status']=='Resolved' %}selected{% endif %}>Resolved
+                                </option>
+                                <option value="Escalated" {% if c['status']=='Escalated' %}selected{% endif %}>Escalated
+                                </option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p style="margin-top:0.75rem;font-size:0.82rem;color:var(--text-3);">
+        Showing <strong>{{ complaints|length }}</strong> complaint(s)
+    </p>
+
+    {% else %}
+    <div class="empty-state"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+        <div class="empty-icon">🗂️</div>
+        <h3>No complaints found</h3>
+        <p>Try adjusting your filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

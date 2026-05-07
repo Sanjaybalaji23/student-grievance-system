@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Audit Logs{% endblock %}
+
+{% block navbar %}
+<nav class="topbar">
+    <a class="topbar-brand" href="/dashboard">
+        <div class="brand-icon">🎓</div>
+        Grievance<span class="brand-hl">Hub</span>
+    </a>
+    <ul class="topbar-nav">
+        <li><a href="/dashboard">🏠 Dashboard</a></li>
+        <li><a href="/admin">⚙️ Admin</a></li>
+        <li><a href="/admin/complaints">📋 Complaints</a></li>
+        <li><a href="/admin/audit-logs" class="active">🔍 Audit Logs</a></li>
+        <li><a href="/logout" class="btn-nav-logout">🚪 Logout</a></li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="breadcrumb">
+                <a href="/admin">Admin</a>
+                <span class="breadcrumb-sep">›</span>
+                <span>Audit Logs</span>
+            </div>
+            <h1>Audit Logs</h1>
+            <p>Complete record of system activity, user actions, and security events.</p>
+        </div>
+        <a href="/admin" class="btn btn-secondary">← Back to Admin</a>
+    </div>
+
+    {% if logs %}
+    <div class="table-wrapper">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>IP Address</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <!-- Index -->
+                    <td style="color:var(--text-4);font-size:0.8rem;">
+                        {{ loop.index }}
+                    </td>
+
+                    <!-- User -->
+                    <td>
+                        <span style="font-size:0.875rem;font-weight:600;color:var(--accent-dark);">
+                            {{ log.email }}
+                        </span>
+                    </td>
+
+                    <!-- Action -->
+                    <td>
+                        {% set act = log.action | lower %}
+                        {% if 'login' in act %}
+                        <span>🔑 {{ log.action }}</span>
+                        {% elif 'logout' in act %}
+                        <span>🚪 {{ log.action }}</span>
+                        {% elif 'submit' in act %}
+                        <span>✍️ {{ log.action }}</span>
+                        {% elif 'update' in act %}
+                        <span>🔄 {{ log.action }}</span>
+                        {% else %}
+                        <span>{{ log.action }}</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- IP -->
+                    <td>
+                        <code style="font-size:0.8rem;color:var(--text-3);background:var(--surface2);padding:2px 7px;border-radius:5px;border:1px solid var(--border);">
+                            {{ log.ip_address }}
+                        </code>
+                    </td>
+
+                    <!-- Timestamp -->
+                    <td style="font-size:0.83rem;color:var(--text-3);white-space:nowrap;">
+                        {{ log.timestamp }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p style="margin-top:0.75rem;font-size:0.82rem;color:var(--text-3);">
+        Showing <strong>{{ logs|length }}</strong> log entries
+    </p>
+
+    {% else %}
+    <div class="empty-state"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+        <div class="empty-icon">🔍</div>
+        <h3>No audit logs yet</h3>
+        <p>System activity will appear here as users interact with the portal.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

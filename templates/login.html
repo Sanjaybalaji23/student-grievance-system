@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+
+{% block extra_styles %}
+<style>
+    :root {
+        --module-bg: linear-gradient(rgba(241, 245, 249, 0.80), rgba(224, 231, 255, 0.88)), url('/static/images/auth_bg.png') center/cover no-repeat fixed;
+    }
+
+    body {
+        animation: none;
+    }
+
+    .auth-wrap {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        position: relative;
+        background: var(--module-bg, #f8fafc);
+    }
+
+    .auth-right {
+        width: 100%;
+        max-width: 440px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 1200px;
+        z-index: 10;
+    }
+
+    .auth-form-wrap {
+        width: 100%;
+        padding: 4rem 3rem;
+        transform-style: preserve-3d;
+        animation: formEntry 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        position: relative;
+    }
+
+    @keyframes formEntry {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--text) !important;
+        margin-bottom: 0.4rem;
+        letter-spacing: -0.02em;
+    }
+
+    .form-sub {
+        font-size: 0.9rem;
+        color: var(--text-3) !important;
+        margin-bottom: 2.5rem;
+    }
+
+    .auth-form-wrap .form-group label {
+        color: var(--text-2) !important;
+        font-weight: 600 !important;
+        font-size: 0.875rem !important;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .input-wrap {
+        position: relative;
+    }
+
+    .input-wrap .i-icon {
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1rem;
+        pointer-events: none;
+    }
+
+    .auth-form-wrap .form-control {
+        padding-left: 2.6rem !important;
+    }
+
+    .input-wrap .eye-toggle {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 4px;
+        border-radius: 5px;
+        transition: color var(--transition), background var(--transition);
+        display: flex;
+        align-items: center;
+    }
+
+    .input-wrap .eye-toggle:hover {
+        background: var(--surface2);
+    }
+
+    .btn-sign-in {
+        width: 100%;
+        padding: 0.9rem;
+        background: var(--accent);
+        color: #fff !important;
+        border: none;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 0.5rem;
+    }
+
+    .btn-sign-in:hover {
+        background: var(--accent-dark);
+        box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
+        transform: translateY(-2px);
+    }
+
+    .btn-sign-in:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+    }
+
+    .btn-spinner-ring {
+        display: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spinR 0.7s linear infinite;
+    }
+
+    @keyframes spinR {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .btn-sign-in.loading .btn-spinner-ring {
+        display: block;
+    }
+
+    .btn-sign-in.loading .btn-label {
+        opacity: 0.7;
+    }
+
+    .or-sep {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+        font-size: 0.78rem;
+        color: var(--text-4) !important;
+    }
+
+    .or-sep::before,
+    .or-sep::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .register-link {
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--text-3) !important;
+    }
+
+    .register-link a {
+        color: var(--accent) !important;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .register-link a:hover {
+        color: var(--accent-dark) !important;
+        text-decoration: underline;
+    }
+
+    .flash-item {
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 500;
+    }
+
+    .flash-error {
+        background: var(--danger-soft);
+        color: var(--danger) !important;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .flash-success {
+        background: var(--accent-soft);
+        color: var(--accent-dark) !important;
+        border: 1px solid rgba(79, 70, 229, 0.2);
+    }
+
+    @media (max-width: 768px) {
+        .auth-form-wrap {
+            padding: 2.5rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-right">
+        <div class="auth-form-wrap glass-card">
+            <div class="auth-logo" style="align-items:center;margin-bottom:2rem;text-align:center;">
+                <div class="logo-icon" style="margin:0 auto 0.5rem auto;">🎓</div>
+                <h1 class="form-title" style="margin-bottom:0;">Welcome back</h1>
+                <p class="form-sub" style="margin-bottom:0;">Sign in to your student portal</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for cat, msg in messages %}
+            <div class="flash-item flash-{{ 'error' if cat == 'error' else 'success' }}">
+                {{ '❌' if cat == 'error' else '✅' }} {{ msg }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/login" id="loginForm" autocomplete="on">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <div class="input-wrap">
+                        <span class="i-icon">✉️</span>
+                        <input type="email" id="email" name="email" class="form-control"
+                            placeholder="you@college.edu.in" required autocomplete="email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap" style="position:relative;">
+                        <span class="i-icon">🔑</span>
+                        <input type="password" id="password" name="password" class="form-control"
+                            placeholder="Enter your password" required autocomplete="current-password"
+                            style="padding-right:3rem;">
+                        <button type="button" class="eye-toggle" id="eyeBtn" onclick="togglePw()"
+                            aria-label="Toggle password">
+                            <span id="eyeIcon">👁</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-sign-in" id="loginBtn">
+                    <span class="btn-spinner-ring"></span>
+                    <span class="btn-label">Sign In →</span>
+                </button>
+            </form>
+
+            <div class="or-sep">or</div>
+
+            <div class="register-link">
+                Don't have an account?
+                <a href="/register">Create one here →</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function togglePw() {
+        const pw = document.getElementById('password');
+        const icon = document.getElementById('eyeIcon');
+        pw.type = pw.type === 'password' ? 'text' : 'password';
+        icon.textContent = pw.type === 'password' ? '👁' : '🙈';
+    }
+
+    const authFormWrap = document.querySelector('.auth-form-wrap');
+    const authRight = document.querySelector('.auth-right');
+
+    if (authRight && authFormWrap) {
+        authRight.addEventListener('mousemove', (e) => {
+            const rect = authFormWrap.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const mouseX = e.clientX - centerX;
+            const mouseY = e.clientY - centerY;
+            const rotateX = -(mouseY / (rect.height / 2)) * 6;
+            const rotateY = (mouseX / (rect.width / 2)) * 6;
+            authFormWrap.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        authRight.addEventListener('mouseleave', () => {
+            authFormWrap.style.transition = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            authFormWrap.style.transform = 'perspective(1200px) rotateX(0) rotateY(0)';
+        });
+
+        authRight.addEventListener('mouseenter', () => {
+            authFormWrap.style.transition = 'none';
+        });
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function () {
+        const btn = document.getElementById('loginBtn');
+        btn.classList.add('loading');
+        btn.disabled = true;
+    });
+</script>
+{% endblock %}

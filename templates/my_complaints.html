@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}My Complaints{% endblock %}
+
+{% block navbar %}
+<nav class="topbar">
+    <a class="topbar-brand" href="/dashboard">
+        <div class="brand-icon">🎓</div>
+        Grievance<span class="brand-hl">Hub</span>
+    </a>
+    <ul class="topbar-nav">
+        <li><a href="/dashboard">🏠 Dashboard</a></li>
+        <li><a href="/submit">✍️ New Complaint</a></li>
+        <li><a href="/my-complaints" class="active">📋 My Complaints</a></li>
+        <li><a href="/logout" class="btn-nav-logout">🚪 Logout</a></li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    :root {
+        --module-bg: linear-gradient(rgba(255, 251, 235, 0.85), rgba(254, 243, 199, 0.88)), url('/static/images/dashboard_bg.png') center/cover no-repeat fixed;
+    }
+
+    /* Local Search Customizations */
+    .search-bar {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .search-input-wrap {
+        flex: 1;
+        min-width: 200px;
+        position: relative;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.85rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.9rem;
+        pointer-events: none;
+        color: var(--text-4);
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.55rem 0.9rem 0.55rem 2.4rem;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 9px;
+        color: #111;
+        font-size: 0.875rem;
+        font-family: inherit;
+        outline: none;
+        transition: border-color var(--transition);
+    }
+
+    .search-input::placeholder {
+        color: #888;
+    }
+
+    .search-input:focus {
+        border-color: var(--accent);
+    }
+
+    .filter-sel {
+        padding: 0.55rem 0.85rem;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 9px;
+        color: #111;
+        font-size: 0.875rem;
+        font-family: inherit;
+        outline: none;
+        cursor: pointer;
+        transition: border-color var(--transition);
+        min-width: 130px;
+    }
+
+    .filter-sel:focus {
+        border-color: var(--accent);
+    }
+
+    .count-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0.25rem 0.75rem;
+        background: var(--accent-soft);
+        border: 1px solid #6ee7b7;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #065f46;
+    }
+
+    .complaint-id {
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: var(--info-soft);
+        color: #3730a3;
+        border: 1px solid #c4b5fd;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .no-results-row td {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-3) !important;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+        .search-bar {
+            flex-direction: column;
+        }
+
+        .filter-sel,
+        .search-input-wrap {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="breadcrumb">
+                <a href="/dashboard">Dashboard</a>
+                <span class="breadcrumb-sep">›</span>
+                <span>My Complaints</span>
+            </div>
+            <h1>My Complaints</h1>
+            <p>Track the status of all your submitted grievances.</p>
+        </div>
+        <a href="/submit" class="btn btn-primary">✍️ New Complaint</a>
+    </div>
+
+    {% if complaints %}
+    <!-- Search & Filter -->
+    <div class="search-bar glass-card">
+        <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search complaints…"
+                oninput="filterTable()">
+        </div>
+        <select class="filter-sel" id="statusFilter" onchange="filterTable()">
+            <option value="">All Statuses</option>
+            <option value="Pending">⏳ Pending</option>
+            <option value="In Progress">🔄 In Progress</option>
+            <option value="Resolved">✅ Resolved</option>
+            <option value="Escalated">🔺 Escalated</option>
+        </select>
+        <select class="filter-sel" id="priorityFilter" onchange="filterTable()">
+            <option value="">All Priorities</option>
+            <option value="High">🔴 High</option>
+            <option value="Medium">🟡 Medium</option>
+            <option value="Low">🟢 Low</option>
+        </select>
+        <span class="count-chip" id="resultCount">📋 {{ complaints|length }} complaints</span>
+    </div>
+
+    <div class="table-wrapper glass-card" style="padding: 1.5rem; overflow: hidden;">
+        <table class="styled-table" id="complaintsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Media</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                {% for c in complaints %}
+                <!-- ✅ FIX: dict keys instead of indexes -->
+                <tr data-title="{{ c['title']|lower }}" data-status="{{ c['status'] }}"
+                    data-priority="{{ c['priority'] }}">
+                    <td><span class="complaint-id">#{{ c['complaint_id'] }}</span></td>
+                    <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                        title="{{ c['title'] }}">
+                        {{ c['title'] }}
+                    </td>
+                    <td style="font-size:0.83rem;color:rgba(255,255,255,0.7);">{{ c['category'] }}</td>
+                    <td>
+                        {% if c['priority'] == 'High' %}<span class="badge badge-high">🔴 High</span>
+                        {% elif c['priority'] == 'Medium' %}<span class="badge badge-medium">🟡 Medium</span>
+                        {% else %}<span class="badge badge-low">🟢 Low</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if c['media_path'] %}
+                        <a href="{{ url_for('static', filename=c['media_path']) }}" target="_blank"
+                            style="color: #60a5fa; text-decoration: underline; font-size: 0.82rem; font-weight: 600;">📎
+                            View</a>
+                        {% else %}
+                        <span style="font-size: 0.8rem; color: rgba(255,255,255,0.4);">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c['status'] == 'Pending' %}<span class="badge badge-pending">⏳ Pending</span>
+                        {% elif c['status'] == 'In Progress' %}<span class="badge badge-progress">🔄 In Progress</span>
+                        {% elif c['status'] == 'Resolved' %}<span class="badge badge-resolved">✅ Resolved</span>
+                        {% elif c['status'] == 'Escalated' %}<span class="badge badge-escalated">🔺 Escalated</span>
+                        {% else %}<span class="badge" style="background:var(--surface2);color:var(--text-3);">{{
+                            c['status'] }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.82rem;color:rgba(255,255,255,0.7);white-space:nowrap;">
+                        <!-- ✅ FIX: use dict key for date -->
+                        {{ c['created_at'].strftime('%d %b %Y') if c['created_at'] else '-' }}
+                    </td>
+                </tr>
+                {% endfor %}
+                <tr id="noResultsRow" style="display:none;">
+                    <td colspan="6" class="no-results-row">🔍 No complaints match your search.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state"
+        style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+        <div class="empty-icon">🗂️</div>
+        <h3 style="color:#ffffff;">No complaints yet</h3>
+        <p style="color:rgba(255,255,255,0.7);">You haven't filed any grievances. Click below to submit one.</p>
+        <a href="/submit" class="btn btn-primary" style="margin-top:1rem;">✍️ Submit First Complaint</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function filterTable() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+        const priority = document.getElementById('priorityFilter').value;
+        const rows = document.querySelectorAll('#tableBody tr:not(#noResultsRow)');
+        let visible = 0;
+        rows.forEach(row => {
+            const show =
+                (row.getAttribute('data-title') || '').includes(search) &&
+                (!status || row.getAttribute('data-status') === status) &&
+                (!priority || row.getAttribute('data-priority') === priority);
+            row.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        document.getElementById('resultCount').textContent = '📋 ' + visible + ' complaints';
+        document.getElementById('noResultsRow').style.display = visible === 0 ? '' : 'none';
+    }
+</script>
+{% endblock %}
