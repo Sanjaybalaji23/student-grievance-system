@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, abort, url_for, flash
 from flask_mysqldb import MySQL
-import bcrypt
+from passlib.hash import bcrypt
 import re
 import datetime
 import time
