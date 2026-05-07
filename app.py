@@ -19,11 +19,12 @@ app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 # -------------------------
 # MySQL Configuration
 # -------------------------
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = 'turntable.proxy.rlwy.net'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'root123'
-app.config['MYSQL_DB'] = 'grievance_db'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'   # ✅ FIX: use dict cursor so columns are named, not index-based
+app.config['MYSQL_PASSWORD'] = 'FWeSGWIjgGNNzobwAHnngeceFncGAraw'
+app.config['MYSQL_DB'] = 'railway'
+app.config['MYSQL_PORT'] = 38128
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'  # ✅ FIX: use dict cursor so columns are named, not index-based
 
 mysql = MySQL(app)
 
